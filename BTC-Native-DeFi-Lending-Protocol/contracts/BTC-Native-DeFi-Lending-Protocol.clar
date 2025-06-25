@@ -54,3 +54,48 @@
     last-update-block: uint
   }
 )
+
+;; User collateral deposits
+(define-map user-collateral
+  { user: principal, asset-contract: principal }
+  { amount: uint }
+)
+
+;; User borrows
+(define-map user-borrows
+  { user: principal, asset-contract: principal }
+  {
+    principal: uint,
+    interest-index: uint,
+    last-update-block: uint
+  }
+)
+
+;; Data persistence for pending BTC collateral operations
+(define-map pending-btc-collateral
+  { bitcoin-tx-id: (buff 32) }
+  {
+    user: principal,
+    amount: uint,
+    status: (string-ascii 20)
+  }
+)
+
+;; Contract initialization
+(define-data-var contract-initialized bool false)
+
+;; Access control - only contract owner
+(define-private (check-owner)
+  (if (is-eq tx-sender CONTRACT_OWNER)
+    (ok true)
+    ERR_UNAUTHORIZED
+  )
+)
+
+;; Access control - check if protocol is operational
+(define-private (check-protocol-active)
+  (if (var-get protocol-paused)
+    ERR_PROTOCOL_PAUSED
+    (ok true)
+  )
+)
